@@ -8,9 +8,14 @@ from django.db import models
 from django.conf import settings
 from django.urls import reverse_lazy
 
+import docker
+import docker.errors
+
 import requests
 
 from core.models import Warehouse
+
+clients_cache = {}
 
 
 def get_server_object_model(object_type=None):
@@ -45,8 +50,9 @@ class Server(models.Model):
     )
 
     SUBPROCESS = "subprocess"
+    DOCKER = "docker"
 
-    BACKENDS = ((SUBPROCESS, SUBPROCESS),)
+    BACKENDS = ((SUBPROCESS, SUBPROCESS), (DOCKER, DOCKER))
 
     DOWN = "down"
     UP = "up"
@@ -100,7 +106,7 @@ class Server(models.Model):
         if self.backend == self.SUBPROCESS:
             env = os.environ.copy()
             env.update(
-                {"SERVER_OBJECT_TYPE": self.type, "SERVER_OBJECT_ID": self.object_id,}
+                {"SERVER_OBJECT_TYPE": self.type, "SERVER_OBJECT_ID": self.object_id}
             )
             return subprocess.Popen(
                 [
@@ -111,11 +117,51 @@ class Server(models.Model):
                 ],
                 env=env,
             )
+        elif self.backend == self.DOCKER:
+            if "docker" not in clients_cache:
+                client = docker.from_env()
+                clients_cache["docker"] = client
+            else:
+                client = clients_cache["docker"]
+
+            env = os.environ.copy()
+            env.update(
+                {"SERVER_OBJECT_TYPE": self.type, "SERVER_OBJECT_ID": self.object_id}
+            )
+            name = "autonomousdomain_{name}".format(name=self.name.lower().replace(' ', '_'))
+            port = int(self.netloc.rsplit(':', 1)[1])
+
+            try:
+                image = client.images.list(
+                    filters={"label": "name=autonomousdomain_server"},
+                )[0]
+            except IndexError:
+                image = client.images.build(
+                    path=settings.BASE_DIR,
+                    labels={"name": "autonomousdomain_server"},
+                    rm=True,
+                    forcerm=True,
+                )[0]
+
+            try:
+                return client.containers.get(name)
+            except docker.errors.NotFound:
+                return client.containers.run(
+                    image.id,
+                    "python manage.py runserver {netloc}".format(netloc=self.netloc),
+                    detach=True,
+                    name=name,
+                    ports={'{port}/tcp'.format(port=port): port},
+                    volumes={settings.BASE_DIR: {'bind': '/mnt', 'mode': 'rw'}},
+                    working_dir='/mnt',
+                    environment=env,
+                    network_mode='host',
+                )
 
         raise NotImplementedError(self.backend)
 
     def kill(self):
-        if self.backend == self.SUBPROCESS:
+        if self.backend in (self.SUBPROCESS, self.DOCKER):
             if self.scheme in ("http", "https"):
                 kill_url = urljoin(self.get_hostname(), self.kill_path)
 
