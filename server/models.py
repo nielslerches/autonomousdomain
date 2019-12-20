@@ -123,16 +123,19 @@ class Server(models.Model):
                 clients_cache["docker"] = client
             else:
                 client = clients_cache["docker"]
+
             env = os.environ.copy()
             env.update(
                 {"SERVER_OBJECT_TYPE": self.type, "SERVER_OBJECT_ID": self.object_id}
             )
-            name = "autonomousdomain_{name}".format(name=self.name.lower().replace(' ', '_'))
-            port = int(self.netloc.rsplit(':', 1)[1])
+            name = "autonomousdomain_{name}".format(
+                name=self.name.lower().replace(" ", "_")
+            )
+            port = int(self.netloc.rsplit(":", 1)[1])
 
             try:
                 image = client.images.list(
-                    filters={"label": "name=autonomousdomain_server"},
+                    filters={"label": "name=autonomousdomain_server"}
                 )[0]
             except IndexError:
                 image = client.images.build(
@@ -150,11 +153,11 @@ class Server(models.Model):
                     "python manage.py runserver {netloc}".format(netloc=self.netloc),
                     detach=True,
                     name=name,
-                    ports={'{port}/tcp'.format(port=port): port},
-                    volumes={settings.BASE_DIR: {'bind': '/mnt', 'mode': 'rw'}},
-                    working_dir='/mnt',
+                    ports={"{port}/tcp".format(port=port): port},
+                    volumes={settings.BASE_DIR: {"bind": "/mnt", "mode": "rw"}},
+                    working_dir="/mnt",
                     environment=env,
-                    network_mode='host',
+                    network_mode="host",
                 )
 
         raise NotImplementedError(self.backend)
