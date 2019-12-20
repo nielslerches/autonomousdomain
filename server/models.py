@@ -123,7 +123,6 @@ class Server(models.Model):
                 clients_cache["docker"] = client
             else:
                 client = clients_cache["docker"]
-
             env = os.environ.copy()
             env.update(
                 {"SERVER_OBJECT_TYPE": self.type, "SERVER_OBJECT_ID": self.object_id}
