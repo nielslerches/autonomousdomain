@@ -124,10 +124,6 @@ class Server(models.Model):
             else:
                 client = clients_cache["docker"]
 
-            env = os.environ.copy()
-            env.update(
-                {"SERVER_OBJECT_TYPE": self.type, "SERVER_OBJECT_ID": self.object_id}
-            )
             name = "autonomousdomain_{name}".format(
                 name=self.name.lower().replace(" ", "_")
             )
@@ -156,7 +152,10 @@ class Server(models.Model):
                     ports={"{port}/tcp".format(port=port): port},
                     volumes={settings.BASE_DIR: {"bind": "/mnt", "mode": "rw"}},
                     working_dir="/mnt",
-                    environment=env,
+                    environment={
+                        "SERVER_OBJECT_TYPE": self.type,
+                        "SERVER_OBJECT_ID": self.object_id,
+                    },
                     network_mode="host",
                 )
 
