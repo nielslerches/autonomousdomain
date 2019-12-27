@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('server', '0001_initial'),
+        ("server", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='server',
-            name='backend',
-            field=models.CharField(choices=[('subprocess', 'subprocess'), ('docker', 'docker')], default='subprocess', max_length=255),
+            model_name="server",
+            name="backend",
+            field=models.CharField(
+                choices=[("subprocess", "subprocess"), ("docker", "docker")],
+                default="subprocess",
+                max_length=255,
+            ),
         ),
     ]

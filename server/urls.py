@@ -20,6 +20,9 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.urls import path
 
+from core.models import Warehouse
+from core.views import RESTFulListView, RESTFulObjectView
+
 
 def kill(request):
     os.kill(os.getpid(), signal.SIGKILL)
@@ -33,4 +36,19 @@ urlpatterns = [
 ]
 
 if settings.SERVER_OBJECT_TYPE:
-    urlpatterns += []
+    urlpatterns += [
+        path(
+            "warehouses/",
+            RESTFulListView.as_view(
+                app_name=app_name, model=Warehouse, fields=["name"]
+            ),
+            name="warehouses",
+        ),
+        path(
+            "warehouses/<int:pk>/",
+            RESTFulObjectView.as_view(
+                app_name=app_name, model=Warehouse, fields=["name"]
+            ),
+            name="warehouse",
+        ),
+    ]
