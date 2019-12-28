@@ -1,5 +1,6 @@
 from typing import Type
 
+from django import forms
 from django.http.response import JsonResponse
 from django.db import models
 from django.views.generic.detail import DetailView
@@ -158,7 +159,8 @@ class RESTFulObjectView(UpdateView, DetailView):
                 "data": serialize_model_instance(
                     self.object,
                     show_fields=self.request.GET.getlist("fields") or self.fields,
-                )
+                ),
+                "error": None,
             }
         )
 
@@ -167,6 +169,12 @@ class RESTFulObjectView(UpdateView, DetailView):
             self.app_name + ":" + self.model._meta.verbose_name.replace(" ", "_"),
             args=(self.object.id,),
         )
+
+    def form_valid(self, form: forms.ModelForm):
+        return self.response_class({"data": "OK", "error": None})
+
+    def form_invalid(self, form: forms.ModelForm):
+        return self.response_class({"data": "NOT OK", "error": form.errors})
 
 
 class RESTFulListView(CreateView, ListView):
@@ -213,10 +221,22 @@ class RESTFulListView(CreateView, ListView):
         return object_list
 
     def render_to_response(self, context, **response_kwargs):
-        return self.response_class({"data": context["object_list"]}, **response_kwargs)
+        return self.response_class(
+            {"data": context["object_list"], "error": None}, **response_kwargs
+        )
 
-    def get_success_url(self):
+    def get_success_url(self, instance=None):
         return reverse_lazy(
             self.app_name + ":" + self.model._meta.verbose_name.replace(" ", "_"),
-            args=(self.object.id,),
+            args=(self.object.id if instance is None else instance.id,),
         )
+
+    def form_valid(self, form: forms.ModelForm):
+        self.object = form.save()
+
+        response = self.response_class({"data": "OK", "error": None})
+        response["Location"] = self.get_success_url(instance=form.instance)
+        return response
+
+    def form_invalid(self, form: forms.ModelForm):
+        return self.response_class({"data": "NOT OK", "error": form.errors})

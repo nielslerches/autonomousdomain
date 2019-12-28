@@ -15,14 +15,14 @@ class Warehouse(models.Model):
     name = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return self.name or self.actor.name
+        return self.name
 
 
 class DeliveryCenter(models.Model):
     name = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return self.name or self.actor.name
+        return self.name
 
 
 class FulfillmentCenter(models.Model):
@@ -35,7 +35,7 @@ class FulfillmentCenter(models.Model):
     name = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return self.name or self.actor.name
+        return self.name
 
 
 class Market(models.Model):
@@ -99,7 +99,7 @@ class Supplier(models.Model):
     name = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return self.name or self.actor.name
+        return self.name
 
 
 class SupplierFulfillmentCenter(models.Model):
