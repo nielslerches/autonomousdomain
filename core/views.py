@@ -49,7 +49,7 @@ def get_queryset_operations(model, request_data):
         split_key = key.split(".")
         value = request_data[key]
 
-        for depth, path in enumerate(split_key):
+        for depth in range(len(split_key)):
             pred_paths = split_key[: depth + 1]
 
             if is_chain_of_foreign_objects(model, pred_paths):

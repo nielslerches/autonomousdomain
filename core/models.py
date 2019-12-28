@@ -75,7 +75,7 @@ class SalesChannel(models.Model):
             OR,
             [
                 Q(app_label=model._meta.app_label, model=model._meta.model_name)
-                for model in [OnlineShop,]
+                for model in [OnlineShop]
             ],
         ),
         null=True,
