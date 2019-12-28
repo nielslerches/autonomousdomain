@@ -25,11 +25,11 @@ def get_fields(model: Type[models.Model]):
 def is_chain_of_foreign_objects(model: Type[models.Model], split_key: list):
     fields = get_fields(model)
 
-    for path in split_key:
-        field = fields[path]
+    for split_key_part in split_key:
+        field = fields[split_key_part]
         if not any((field.one_to_many, field.one_to_one)):
             break
-        model = fields[path].related_model
+        model = fields[split_key_part].related_model
         fields = get_fields(model)
     else:
         return True
