@@ -6,7 +6,7 @@ from django.db import models
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, path
 
 
 def swallow(exceptions, default, func, *args, **kwargs):
@@ -240,3 +240,21 @@ class RESTFulListView(CreateView, ListView):
 
     def form_invalid(self, form: forms.ModelForm):
         return self.response_class({"data": "NOT OK", "error": form.errors})
+
+
+def create_resource(app_name, model, fields):
+    name_plural = model._meta.verbose_name_plural.replace(" ", "_")
+    name = model._meta.verbose_name.replace(" ", "_")
+
+    return [
+        path(
+            "{}/".format(name_plural),
+            RESTFulListView.as_view(app_name=app_name, model=model, fields=fields),
+            name=name_plural,
+        ),
+        path(
+            "{}/<int:pk>/".format(name_plural),
+            RESTFulObjectView.as_view(app_name=app_name, model=model, fields=fields),
+            name=name,
+        ),
+    ]

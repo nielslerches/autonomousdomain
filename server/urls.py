@@ -21,7 +21,7 @@ from django.http import HttpResponse
 from django.urls import path
 
 from core.models import Warehouse
-from core.views import RESTFulListView, RESTFulObjectView
+from core.views import create_resource
 
 
 def kill(request):
@@ -36,19 +36,4 @@ urlpatterns = [
 ]
 
 if settings.SERVER_OBJECT_TYPE:
-    urlpatterns += [
-        path(
-            "warehouses/",
-            RESTFulListView.as_view(
-                app_name=app_name, model=Warehouse, fields=["name"]
-            ),
-            name="warehouses",
-        ),
-        path(
-            "warehouses/<int:pk>/",
-            RESTFulObjectView.as_view(
-                app_name=app_name, model=Warehouse, fields=["name"]
-            ),
-            name="warehouse",
-        ),
-    ]
+    urlpatterns += create_resource(app_name=app_name, model=Warehouse, fields=["name"])
